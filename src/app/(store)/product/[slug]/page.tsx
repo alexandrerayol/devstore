@@ -24,6 +24,15 @@ export async function generateMetadata({ params }: {params: {slug: string}}): Pr
     )
 }
 
+export async function generateStaticParams() {
+    const response = await api('/products/featured')
+    const products:product[] = await response.json()
+
+    return products.map(product => {
+        return { slug: product.slug }
+    })
+}
+
 async function getProduct(slug: string):Promise<product> {
     const response = await api(`/products/${slug}`);
     const product = await response.json()
