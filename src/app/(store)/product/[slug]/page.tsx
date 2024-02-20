@@ -25,12 +25,12 @@ export async function generateMetadata({ params }: {params: {slug: string}}): Pr
 }
 
 export async function generateStaticParams() {
-    const response = await api('/products/featured')
-    const products:product[] = await response.json()
 
-    return products.map(product => {
-        return { slug: product.slug }
-    })
+    return [
+        {slug:'moletom-never-stop-learning'},
+        {slug:'moletom-ai-side' },
+        {slug:'camiseta-dowhile-2022'},
+    ]
 }
 
 async function getProduct(slug: string):Promise<product> {
