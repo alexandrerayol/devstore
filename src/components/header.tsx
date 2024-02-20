@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { CartWidget } from "./cart-widget";
 import { SearchForm } from "./search-form";
+import { Suspense } from "react";
 
 export function Header(){
     return(
@@ -10,7 +11,10 @@ export function Header(){
 
                 <Link href={'/'} className="text-2xl font-extrabold">devstore</Link>
                 
-                <SearchForm />
+                <Suspense>
+                    <SearchForm />
+                </Suspense>
+                
             </div>
 
             <div className="flex items-center justify-center gap-4 text-sm font-medium">
