@@ -20,9 +20,9 @@ async function searchProducts(query: string): Promise<product[]> {
 export default async function Search({ searchParams }: searchProps) {
     const query = searchParams.query
 
-    /*     if(!query){
-            redirect('/')
-        } */
+    if (!query) {
+        redirect('/')
+    }
 
     const products = await searchProducts(query)
 
