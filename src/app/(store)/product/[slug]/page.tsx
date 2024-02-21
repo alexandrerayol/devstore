@@ -1,55 +1,67 @@
 import { AddToCartButton } from "@/components/add-to-cart-button";
-import { api } from "@/data/api";
+import { db } from "@/data/firebase";
 import { product } from "@/data/types/product";
+import { doc, getDoc } from "firebase/firestore";
 
 import { Metadata } from "next"
 import Image from "next/image";
 
 export async function generateMetadata({ params }: {params: {slug: string}}): Promise<Metadata> {
-
     const product = await getProduct(params.slug)
-
-    if (product.ErrorMessage) {
-        return (
-            {
-                title: product.ErrorMessage
-            }
-        )
-    }
 
     return (
         {
-            title: product.title
+            title: product?.title
         }
     )
 }
 
-export async function generateStaticParams() {
+ export async function generateStaticParams() {
 
-    return [
-        {slug:'moletom-never-stop-learning'},
-        {slug:'moletom-ai-side' },
-        {slug:'camiseta-dowhile-2022'},
-    ]
-}
+    try{
+        const docRef = doc(db, "products", "hOpUYbinIgboS0Zeypvr");
+        const data = await getDoc(docRef)
+        const products:product[] = data.data()?.products
 
-async function getProduct(slug: string):Promise<product> {
-    const response = await api(`/products/${slug}`);
-    const product = await response.json()
+        return products.map(product => {
+            return {slug: product.slug}
+        })
 
-    return product
+    }catch{
+        return [
+            {slug: "moletom-never-stop-learning"},
+            {slug: "moletom-ai-side"},
+            {slug: "camiseta-dowhile-2022"},
+        ]
+    }
+} 
+
+async function getProduct(slug: string){
+    try{
+        const docRef = doc(db, "products", "hOpUYbinIgboS0Zeypvr");
+        const docSnap = await getDoc(docRef);
+      
+        const data:product[] = docSnap.data()?.products
+        return data.find(product => product.slug === slug)
+    }
+    catch{
+        return null
+    }
+
 }
 
 export default async function Product({ params }: {params: {slug:string}}) {
 
     const product = await getProduct(params.slug)
 
-    if (product.ErrorMessage) {
-        return <h1>Product not found</h1>
+    if(!product){
+        return(
+            <h1>product not found</h1>
+        )
     }
 
     return (
-        <div className="relative max-h-[860px] grid grid-cols-3">
+         <div className="relative max-h-[860px] grid grid-cols-3">
             <div className="col-span-2 overflow-hidden">
                 <Image className=""
                  src={product.image} alt={product.title} width={1000} height={1000} quality={100}/>
@@ -79,6 +91,6 @@ export default async function Product({ params }: {params: {slug:string}}) {
 
                 <AddToCartButton productId={product.id}/>
             </div>
-        </div>
+        </div> 
     )
 }

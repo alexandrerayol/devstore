@@ -1,34 +1,39 @@
-import { api } from "@/data/api";
+import { db } from '@/data/firebase'
+import { doc, getDoc } from 'firebase/firestore';
 import { product } from "@/data/types/product";
 import Image from "next/image";
 import Link from "next/link";
 
 
-async function getFeaturedProducts() : Promise<product[]>{
+async function getProducts(){
   try{
-    const response = await api('/products/featured', {
-      next: {
-        revalidate: 60 * 60, // 1h
-      }
-    })
-    const data = await response.json()
-    return data
+    const docRef = doc(db, "products", "hOpUYbinIgboS0Zeypvr");
+    const docSnap = await getDoc(docRef);
+  
+    const data:product[] = docSnap.data()?.products
+
+    const featuredProducts = data.filter( product => {
+    return product.featured === true
+  })
+
+    return featuredProducts
   }catch{
-    return [];
+    return null
   }
 }
 
 export default async function Home() {
 
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    const products = await getFeaturedProducts()
-
-    const [highLightedProduct, ...otherProducts] = products
-
+    const featuredProducts = await getProducts()
+    if(!featuredProducts || featuredProducts.length === 0){
+      return(
+        <h1>erro ao conectar com o banco de dados</h1>
+      )
+    }
+    const [highLightedProduct, ...otherProducts] = featuredProducts
 
     return (
-      <div className="grid max-h-[760px] grid-cols-9 grid-rows-6 gap-6">
+       <div className="grid max-h-[760px] grid-cols-9 grid-rows-6 gap-6">
         
         <Link href={`/product/${highLightedProduct.slug}`} className="relative group col-span-6 row-span-6 rounded-lg bg-zinc-900 flex justify-center items-start overflow-hidden">
           <Image src={highLightedProduct.image} className="max-w-[860px] group-hover:scale-110 transition-transform duration-500" alt={highLightedProduct.title} width={860} height={860} quality={100}/>

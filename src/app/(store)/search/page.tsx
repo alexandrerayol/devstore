@@ -1,4 +1,5 @@
-import { api } from "@/data/api"
+import { db } from "@/data/firebase";
+import { doc, getDoc } from "firebase/firestore";
 import { product } from "@/data/types/product";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,35 +11,44 @@ interface searchProps {
     };
 }
 
-async function searchProducts(query: string): Promise<product[]> {
-    const response = await api(`/products/search?query=${query}`)
-    const products = await response.json()
+async function searchProducts(search: string){
+    try{
+        const docRef = doc(db, "products", "hOpUYbinIgboS0Zeypvr");
+        const data = await getDoc(docRef)
+        const products:product[] = data.data()?.products
 
-    return products
+        const searchProducts = products.filter(product => {
+            if(product.title.toLocaleLowerCase().includes(search.toLocaleLowerCase())){
+                return product
+            }
+        })
+
+        return searchProducts
+    }catch{
+        return null
+    }
 }
 
 export default async function Search({ searchParams }: searchProps) {
     const query = searchParams.query
 
-    if (!query) {
+    if(!query){
         redirect('/')
     }
 
     const products = await searchProducts(query)
 
-    products.map(product => {
-        if (product.ErrorMessage) {
-            return (
-                <>
-                    <h1 className="text-zinc-400">Resultados para <span className="text-zinc-50">"{query}"</span></h1>
-                    <span>Nenhum produto encontrado!</span>
-                </>
-            )
-        }
-    })
-
+    if(!products || products.length === 0){
+        return(
+            <div>
+                <h1>"{query}" not found</h1>
+            </div>
+        )
+    }
 
     return (
+        <>
+        <span>Resultados para "{query}"</span>
         <div className="flex flex-wrap gap-4">
             {
                 products.map(product => (
@@ -57,5 +67,6 @@ export default async function Search({ searchParams }: searchProps) {
                 ))
             }
         </div>
+        </>
     )
 }
